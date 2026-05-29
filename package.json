@@ -19,7 +19,7 @@
     "hierarchy",
     "api"
   ],
-  "author": "",
+  "author": "Jaime Jazareno III",
   "license": "ISC",
   "dependencies": {
     "cors": "latest",
