@@ -1,50 +1,115 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version change: template -> 1.0.0
+Modified principles:
+- Placeholder principles -> I. Code Quality Is Non-Negotiable
+- Placeholder principles -> II. Tests Define Expected Behavior
+- Placeholder principles -> III. User Experience Stays Consistent
+- Placeholder principles -> IV. Performance Is A Requirement
+- Placeholder principles -> V. Linting And Formatting Are Quality Gates
+Added sections:
+- Engineering Standards
+- Development Workflow
+Removed sections:
+- Placeholder-only template sections
+Templates requiring updates:
+- .specify/templates/plan-template.md: updated
+- .specify/templates/spec-template.md: updated
+- .specify/templates/tasks-template.md: updated
+Follow-up TODOs: none
+-->
+
+# Keeply API Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Code Quality Is Non-Negotiable
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Code MUST be clean, readable, and locally consistent with the surrounding
+implementation. Prefer clear names, small modules, and simple control flow over
+clever abstractions. Long lines or large blocks MUST be decoupled into smaller
+expressions, helpers, or data structures when readability suffers.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+All source changes MUST use two-space indentation unless a language-specific
+formatter in the repository requires otherwise. New abstractions are allowed
+only when they reduce real complexity, remove meaningful duplication, or match
+an established project pattern.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Tests Define Expected Behavior
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+Every behavioral change MUST include tests that prove the intended outcome and
+cover important failure paths. Unit tests are required for isolated logic;
+integration or contract tests are required when behavior crosses module,
+service, database, or API boundaries.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Tests MUST be deterministic, readable, and scoped to user-observable behavior.
+If a change cannot reasonably be automated, the plan MUST document the reason
+and include a repeatable manual verification path.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. User Experience Stays Consistent
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+User-facing behavior MUST remain consistent across API responses, validation
+messages, errors, naming, and workflows. New features MUST follow established
+response shapes, status semantics, and interaction patterns unless the spec
+explicitly justifies a change.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Specs MUST describe the user journey, edge cases, and acceptance criteria in
+plain language before implementation begins. Any change that affects existing
+users MUST preserve compatibility or document the migration path.
+
+### IV. Performance Is A Requirement
+
+Performance expectations MUST be stated for user-facing and system-facing
+features before implementation. Plans MUST identify latency, throughput,
+resource, or data-volume constraints relevant to the feature.
+
+Implementations MUST avoid avoidable N+1 queries, unbounded reads, unnecessary
+network calls, and repeated expensive work. Performance-sensitive changes MUST
+include measurement, benchmark, or load-test evidence appropriate to the risk.
+
+### V. Linting And Formatting Are Quality Gates
+
+Linting and formatting MUST run as much as the repository tooling allows before
+work is considered complete. New code MUST not introduce lint, type, format, or
+diagnostic errors. If tooling cannot run, the final handoff MUST state why and
+list any manual checks performed.
+
+Automated fixes are preferred when they are narrow and predictable. Broad
+formatting churn MUST be avoided unless the task is explicitly about formatting
+or the repository already enforces it.
+
+## Engineering Standards
+
+Source code MUST use two-space indentation where project tooling permits it.
+Lines SHOULD stay under 100 characters; when they grow longer, split arguments,
+extract named values, or decouple logic into focused helpers.
+
+Public interfaces MUST have stable, intentional names and predictable error
+behavior. Data access and network operations MUST be bounded by clear filters,
+pagination, limits, or documented constraints.
+
+## Development Workflow
+
+Plans MUST pass the Constitution Check before design work proceeds and again
+after design is complete. The check MUST cover code quality, test coverage, UX
+consistency, performance requirements, indentation, line length, and linting.
+
+Tasks MUST include explicit verification work for tests, linting, formatting,
+and performance where relevant. Reviews MUST block changes that violate this
+constitution unless the plan documents a justified exception and simpler
+alternatives considered.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes conflicting local practices for Spec Kit planning
+and implementation. Amendments require an update to this file, a Sync Impact
+Report, and review of dependent templates so future plans remain aligned.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Versioning follows semantic versioning. MAJOR changes remove or redefine core
+principles, MINOR changes add principles or materially expand requirements, and
+PATCH changes clarify wording without changing obligations.
+
+All feature plans, tasks, and reviews MUST verify constitution compliance.
+Exceptions MUST be explicit, temporary, and tied to a documented follow-up.
+
+**Version**: 1.0.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-05-29

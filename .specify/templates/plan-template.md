@@ -40,7 +40,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- **Code Quality**: Design uses clear boundaries, two-space indentation where
+  tooling permits, and decouples long lines or complex blocks.
+- **Testing Standards**: Unit, integration, contract, or manual verification is
+  defined for each behavior and failure path.
+- **UX Consistency**: API responses, errors, validation, names, and workflows
+  follow existing user-facing patterns or document a justified change.
+- **Performance Requirements**: Latency, throughput, resource, or data-volume
+  constraints are stated, with measurement planned for sensitive paths.
+- **Linting And Formatting**: Required lint, type, format, and diagnostic checks
+  are identified; any unavailable tooling is documented.
 
 ## Project Structure
 

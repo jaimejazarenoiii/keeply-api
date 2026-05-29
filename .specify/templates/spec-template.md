@@ -98,6 +98,19 @@
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
+### Quality Requirements
+
+- **QR-001**: Code MUST follow project style, including two-space indentation
+  where tooling permits and decoupled long lines or complex blocks.
+- **QR-002**: Tests MUST cover primary behavior, important failure paths, and
+  any API, data, or service boundary touched by this feature.
+- **QR-003**: User-facing responses, validation messages, errors, names, and
+  workflows MUST remain consistent with existing patterns.
+- **QR-004**: Performance expectations MUST be measurable, including relevant
+  latency, throughput, resource, or data-volume constraints.
+- **QR-005**: Linting, formatting, type checks, and diagnostics MUST pass where
+  repository tooling exists.
+
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
