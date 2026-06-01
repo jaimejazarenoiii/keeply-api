@@ -18,7 +18,7 @@ hierarchical path of any Item within the structure. The primary purpose of the
 API is to enable reliable tracking of where physical items are stored within
 deeply nested structures."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Register Storage Structure (Priority: P1)
 
@@ -107,7 +107,7 @@ Space to Item.
   the same parent should be distinguishable by unique identifiers.
 - Very deep nesting must still return the path in correct top-to-bottom order.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -163,7 +163,7 @@ Space to Item.
 - **QR-005**: Linting, formatting, type checks, and diagnostics MUST pass where
   repository tooling exists.
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **Space**: A top-level physical location such as a room, vehicle, office, or
   storage unit. A Space owns top-level Containers.
@@ -179,7 +179,7 @@ Space to Item.
 - **Image**: A reference to a visual asset associated with a Space, Container,
   or Item. Each entity may have zero or more Images.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

@@ -3,20 +3,12 @@ const tseslint = require("typescript-eslint");
 
 module.exports = [
   {
-    ignores: [
-      "node_modules/",
-      "dist/",
-      "build/",
-      "coverage/",
-      "*.min.js"
-    ]
+    ignores: ["eslint.config.js", "node_modules/", "dist/", "build/", "coverage/", "*.min.js"]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: [
-      "**/*.ts"
-    ],
+    files: ["**/*.ts"],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.json"

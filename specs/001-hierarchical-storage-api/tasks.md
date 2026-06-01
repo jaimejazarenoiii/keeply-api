@@ -21,21 +21,21 @@ implemented and tested independently.
 **Purpose**: Initialize the Express.js, TypeScript, linting, formatting, and
 folder foundation requested for the backend API.
 
-- [X] T001 Initialize Node.js project metadata and scripts in `package.json`
-- [X] T002 Install runtime dependencies in `package.json`
-- [X] T003 Install TypeScript and Express type dependencies in `package.json`
-- [X] T004 Configure strict TypeScript compiler options in `tsconfig.json`
-- [X] T005 [P] Configure ESLint for TypeScript in `eslint.config.js`
-- [X] T006 [P] Configure Prettier with two-space indentation in `.prettierrc`
-- [X] T007 [P] Configure ignored generated files in `.prettierignore`
-- [X] T008 Create source folder structure in `src/modules/.gitkeep`
-- [X] T009 [P] Create shared folder structure in `src/shared/.gitkeep`
-- [X] T010 [P] Create config folder structure in `src/config/.gitkeep`
-- [X] T011 [P] Create middleware folder structure in `src/middleware/.gitkeep`
-- [X] T012 [P] Create utils folder structure in `src/utils/.gitkeep`
-- [X] T013 [P] Create test folder structure in `tests/unit/.gitkeep`
-- [X] T014 [P] Create integration test folder in `tests/integration/.gitkeep`
-- [X] T015 [P] Create contract test folder in `tests/contract/.gitkeep`
+- [x] T001 Initialize Node.js project metadata and scripts in `package.json`
+- [x] T002 Install runtime dependencies in `package.json`
+- [x] T003 Install TypeScript and Express type dependencies in `package.json`
+- [x] T004 Configure strict TypeScript compiler options in `tsconfig.json`
+- [x] T005 [P] Configure ESLint for TypeScript in `eslint.config.js`
+- [x] T006 [P] Configure Prettier with two-space indentation in `.prettierrc`
+- [x] T007 [P] Configure ignored generated files in `.prettierignore`
+- [x] T008 Create source folder structure in `src/modules/.gitkeep`
+- [x] T009 [P] Create shared folder structure in `src/shared/.gitkeep`
+- [x] T010 [P] Create config folder structure in `src/config/.gitkeep`
+- [x] T011 [P] Create middleware folder structure in `src/middleware/.gitkeep`
+- [x] T012 [P] Create utils folder structure in `src/utils/.gitkeep`
+- [x] T013 [P] Create test folder structure in `tests/unit/.gitkeep`
+- [x] T014 [P] Create integration test folder in `tests/integration/.gitkeep`
+- [x] T015 [P] Create contract test folder in `tests/contract/.gitkeep`
 
 ---
 
@@ -46,23 +46,23 @@ before any user story implementation starts.
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [X] T016 Create Express application with JSON and CORS in `src/app.ts`
-- [X] T017 Create HTTP server bootstrap in `src/server.ts`
-- [X] T018 Add health check route in `src/app.ts`
-- [X] T019 Configure environment parsing in `src/config/env.ts`
-- [X] T020 Setup MongoDB connection with error handling in `src/config/database.ts`
-- [X] T021 Define shared API response types in `src/types/api.ts`
-- [X] T022 Define hierarchy and node TypeScript types in `src/types/node.ts`
-- [X] T023 Define API error code types in `src/types/errors.ts`
-- [X] T024 Create base API error class in `src/utils/errors.ts`
-- [X] T025 Create global error middleware in `src/middleware/error.middleware.ts`
-- [X] T026 Create async route helper in `src/utils/async-handler.ts`
-- [X] T027 Create request validation helper in `src/utils/validation.ts`
-- [X] T028 Create Mongoose Node schema and indexes in `src/models/node.model.ts`
-- [X] T029 Create hierarchy service skeleton in `src/services/hierarchy.service.ts`
-- [X] T030 [P] Add Node model unit tests in `tests/unit/node.model.test.ts`
-- [X] T031 [P] Add error middleware tests in `tests/unit/error.middleware.test.ts`
-- [X] T032 [P] Add OpenAPI contract smoke test in `tests/contract/openapi.test.ts`
+- [x] T016 Create Express application with JSON and CORS in `src/app.ts`
+- [x] T017 Create HTTP server bootstrap in `src/server.ts`
+- [x] T018 Add health check route in `src/app.ts`
+- [x] T019 Configure environment parsing in `src/config/env.ts`
+- [x] T020 Setup MongoDB connection with error handling in `src/config/database.ts`
+- [x] T021 Define shared API response types in `src/types/api.ts`
+- [x] T022 Define hierarchy and node TypeScript types in `src/types/node.ts`
+- [x] T023 Define API error code types in `src/types/errors.ts`
+- [x] T024 Create base API error class in `src/utils/errors.ts`
+- [x] T025 Create global error middleware in `src/middleware/error.middleware.ts`
+- [x] T026 Create async route helper in `src/utils/async-handler.ts`
+- [x] T027 Create request validation helper in `src/utils/validation.ts`
+- [x] T028 Create Mongoose Node schema and indexes in `src/models/node.model.ts`
+- [x] T029 Create hierarchy service skeleton in `src/services/hierarchy.service.ts`
+- [x] T030 [P] Add Node model unit tests in `tests/unit/node.model.test.ts`
+- [x] T031 [P] Add error middleware tests in `tests/unit/error.middleware.test.ts`
+- [x] T032 [P] Add OpenAPI contract smoke test in `tests/contract/openapi.test.ts`
 
 **Checkpoint**: Foundation ready. User story work can now begin.
 
@@ -78,21 +78,21 @@ and retrieve the hierarchy.
 
 ### Tests for User Story 1
 
-- [ ] T033 [P] [US1] Add Space API integration tests in `tests/integration/spaces.test.ts`
-- [ ] T034 [P] [US1] Add Container tree tests in `tests/integration/containers.test.ts`
-- [ ] T035 [P] [US1] Add hierarchy validation unit tests in `tests/unit/hierarchy.service.test.ts`
+- [x] T033 [P] [US1] Add Space API integration tests in `tests/integration/spaces.test.ts`
+- [x] T034 [P] [US1] Add Container tree tests in `tests/integration/containers.test.ts`
+- [x] T035 [P] [US1] Add hierarchy validation unit tests in `tests/unit/hierarchy.service.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T036 [P] [US1] Create Space routes in `src/modules/space/space.routes.ts`
-- [ ] T037 [P] [US1] Create Space controller in `src/modules/space/space.controller.ts`
-- [ ] T038 [US1] Implement Space service CRUD in `src/modules/space/space.service.ts`
-- [ ] T039 [P] [US1] Create Container routes in `src/modules/container/container.routes.ts`
-- [ ] T040 [P] [US1] Create Container controller in `src/modules/container/container.controller.ts`
-- [ ] T041 [US1] Implement Container write logic in `src/modules/container/container.service.ts`
-- [ ] T042 [US1] Implement parent type validation in `src/services/hierarchy.service.ts`
-- [ ] T043 [US1] Implement Space tree retrieval in `src/services/hierarchy.service.ts`
-- [ ] T044 [US1] Register Space and Container routes in `src/app.ts`
+- [x] T036 [P] [US1] Create Space routes in `src/modules/space/space.routes.ts`
+- [x] T037 [P] [US1] Create Space controller in `src/modules/space/space.controller.ts`
+- [x] T038 [US1] Implement Space service CRUD in `src/modules/space/space.service.ts`
+- [x] T039 [P] [US1] Create Container routes in `src/modules/container/container.routes.ts`
+- [x] T040 [P] [US1] Create Container controller in `src/modules/container/container.controller.ts`
+- [x] T041 [US1] Implement Container write logic in `src/modules/container/container.service.ts`
+- [x] T042 [US1] Implement parent type validation in `src/services/hierarchy.service.ts`
+- [x] T043 [US1] Implement Space tree retrieval in `src/services/hierarchy.service.ts`
+- [x] T044 [US1] Register Space and Container routes in `src/app.ts`
 
 **Checkpoint**: User Story 1 is independently functional.
 
@@ -108,19 +108,19 @@ the deepest Container, update metadata/images, move it, and verify location.
 
 ### Tests for User Story 2
 
-- [ ] T045 [P] [US2] Add Item API integration tests in `tests/integration/items.test.ts`
-- [ ] T046 [P] [US2] Add Item parent validation tests in `tests/unit/hierarchy.service.test.ts`
-- [ ] T047 [P] [US2] Add image reference tests in `tests/unit/node.model.test.ts`
+- [x] T045 [P] [US2] Add Item API integration tests in `tests/integration/items.test.ts`
+- [x] T046 [P] [US2] Add Item parent validation tests in `tests/unit/hierarchy.service.test.ts`
+- [x] T047 [P] [US2] Add image reference tests in `tests/unit/node.model.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T048 [P] [US2] Create Item routes in `src/modules/item/item.routes.ts`
-- [ ] T049 [P] [US2] Create Item controller in `src/modules/item/item.controller.ts`
-- [ ] T050 [US2] Implement Item CRUD in `src/modules/item/item.service.ts`
-- [ ] T051 [US2] Implement Item move validation in `src/services/hierarchy.service.ts`
-- [ ] T052 [US2] Implement image normalization in `src/utils/validation.ts`
-- [ ] T053 [US2] Implement subtree Item retrieval in `src/modules/container/container.service.ts`
-- [ ] T054 [US2] Register Item routes in `src/app.ts`
+- [x] T048 [P] [US2] Create Item routes in `src/modules/item/item.routes.ts`
+- [x] T049 [P] [US2] Create Item controller in `src/modules/item/item.controller.ts`
+- [x] T050 [US2] Implement Item CRUD in `src/modules/item/item.service.ts`
+- [x] T051 [US2] Implement Item move validation in `src/services/hierarchy.service.ts`
+- [x] T052 [US2] Implement image normalization in `src/utils/validation.ts`
+- [x] T053 [US2] Implement subtree Item retrieval in `src/modules/container/container.service.ts`
+- [x] T054 [US2] Register Item routes in `src/app.ts`
 
 **Checkpoint**: User Stories 1 and 2 work independently.
 
@@ -136,17 +136,17 @@ retrieve the path, rename/move nodes, and verify the path remains current.
 
 ### Tests for User Story 3
 
-- [ ] T055 [P] [US3] Add Item path integration tests in `tests/integration/items.test.ts`
-- [ ] T056 [P] [US3] Add ancestor traversal unit tests in `tests/unit/hierarchy.service.test.ts`
-- [ ] T057 [P] [US3] Add circular move rejection tests in `tests/integration/containers.test.ts`
+- [x] T055 [P] [US3] Add Item path integration tests in `tests/integration/items.test.ts`
+- [x] T056 [P] [US3] Add ancestor traversal unit tests in `tests/unit/hierarchy.service.test.ts`
+- [x] T057 [P] [US3] Add circular move rejection tests in `tests/integration/containers.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T058 [US3] Implement ancestor traversal in `src/services/hierarchy.service.ts`
-- [ ] T059 [US3] Implement circular move detection in `src/services/hierarchy.service.ts`
-- [ ] T060 [US3] Implement Item path endpoint in `src/modules/item/item.controller.ts`
-- [ ] T061 [US3] Add Item path service method in `src/modules/item/item.service.ts`
-- [ ] T062 [US3] Ensure path responses include images in `src/types/api.ts`
+- [x] T058 [US3] Implement ancestor traversal in `src/services/hierarchy.service.ts`
+- [x] T059 [US3] Implement circular move detection in `src/services/hierarchy.service.ts`
+- [x] T060 [US3] Implement Item path endpoint in `src/modules/item/item.controller.ts`
+- [x] T061 [US3] Add Item path service method in `src/modules/item/item.service.ts`
+- [x] T062 [US3] Ensure path responses include images in `src/types/api.ts`
 
 **Checkpoint**: All user stories are independently functional.
 
@@ -157,15 +157,15 @@ retrieve the path, rename/move nodes, and verify the path remains current.
 **Purpose**: Contract alignment, documentation checks, performance validation,
 and required quality gates.
 
-- [ ] T063 [P] Sync OpenAPI coverage in `specs/001-hierarchical-storage-api/contracts/openapi.yaml`
-- [ ] T064 [P] Add README setup notes in `README.md`
-- [ ] T065 Validate quickstart flow in `specs/001-hierarchical-storage-api/quickstart.md`
-- [ ] T066 Add index verification tests in `tests/unit/node.model.test.ts`
-- [ ] T067 Split long lines or complex blocks across `src/`
-- [ ] T068 Run TypeScript type checks using scripts in `package.json`
-- [ ] T069 Run ESLint using scripts in `package.json`
-- [ ] T070 Run Prettier check using scripts in `package.json`
-- [ ] T071 Run full test suite using scripts in `package.json`
+- [x] T063 [P] Sync OpenAPI coverage in `specs/001-hierarchical-storage-api/contracts/openapi.yaml`
+- [x] T064 [P] Add README setup notes in `README.md`
+- [x] T065 Validate quickstart flow in `specs/001-hierarchical-storage-api/quickstart.md`
+- [x] T066 Add index verification tests in `tests/unit/node.model.test.ts`
+- [x] T067 Split long lines or complex blocks across `src/`
+- [x] T068 Run TypeScript type checks using scripts in `package.json`
+- [x] T069 Run ESLint using scripts in `package.json`
+- [x] T070 Run Prettier check using scripts in `package.json`
+- [x] T071 Run full test suite using scripts in `package.json`
 
 ---
 

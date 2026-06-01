@@ -2,6 +2,8 @@ import type { ErrorRequestHandler } from "express";
 import { isApiError } from "../utils/errors";
 
 export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) => {
+  void _next;
+
   if (isApiError(error)) {
     res.status(error.statusCode).json({
       error: error.toPayload()

@@ -20,6 +20,18 @@ export interface NodeRecord {
   updatedAt: Date;
 }
 
+export interface NodeDto {
+  id: string;
+  type: NodeType;
+  name: string;
+  parentId: string | null;
+  spaceId: string;
+  images: NodeImage[];
+  metadata?: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface TreeNode {
   id: string;
   type: NodeType;

@@ -8,6 +8,17 @@ info:
 servers:
   - url: http://localhost:3000
 paths:
+  /health:
+    get:
+      summary: Check API health
+      operationId: getHealth
+      responses:
+        "200":
+          description: API health returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
   /spaces:
     get:
       summary: List spaces
@@ -144,6 +155,21 @@ paths:
                 $ref: "#/components/schemas/TreeResponse"
         "404":
           $ref: "#/components/responses/Error"
+  /containers/{containerId}/items:
+    get:
+      summary: Get items under a container subtree
+      operationId: listContainerSubtreeItems
+      parameters:
+        - $ref: "#/components/parameters/ContainerId"
+      responses:
+        "200":
+          description: Container subtree items returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeListResponse"
+        "404":
+          $ref: "#/components/responses/Error"
   /containers/{containerId}/move:
     patch:
       summary: Move a container
@@ -221,6 +247,16 @@ paths:
                 $ref: "#/components/schemas/NodeResponse"
         "400":
           $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    delete:
+      summary: Delete an item
+      operationId: deleteItem
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "204":
+          description: Item deleted
         "404":
           $ref: "#/components/responses/Error"
   /items/{itemId}/move:
@@ -479,6 +515,29 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/Node"
+    HealthResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              enum:
+                - ok
+    NodeListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Node"
     SpaceListResponse:
       type: object
       required:
@@ -532,6 +591,7 @@ components:
                 - INVALID_PARENT_TYPE
                 - SPACE_MISMATCH
                 - VALIDATION_ERROR
+                - INTERNAL_ERROR
             message:
               type: string
             details:

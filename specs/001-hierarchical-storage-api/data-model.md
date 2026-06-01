@@ -84,13 +84,17 @@ interface TreeNode {
   id: string;
   type: NodeType;
   name: string;
+  parentId: string | null;
+  spaceId: string;
   images: NodeImage[];
   metadata?: Record<string, unknown>;
-  children?: TreeNode[];
+  children: TreeNode[];
 }
 ```
 
 Items appear as leaf nodes. Containers may include child Containers and Items.
+Phase 3 tree retrieval returns Space and Container nodes with `children` always
+present, even when empty.
 
 ### Item Path
 
