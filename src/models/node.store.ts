@@ -5,16 +5,17 @@ export type CreateNodeInput = Omit<NodeRecord, "createdAt" | "updatedAt">;
 
 export interface NodeStore {
   create(input: CreateNodeInput): Promise<NodeRecord>;
-  findById(id: string): Promise<NodeRecord | null>;
-  findByType(type: NodeType): Promise<NodeRecord[]>;
-  findChildrenBySpace(spaceId: string): Promise<NodeRecord[]>;
+  findById(id: string, userId: string): Promise<NodeRecord | null>;
+  findByType(type: NodeType, userId: string): Promise<NodeRecord[]>;
+  findChildrenBySpace(spaceId: string, userId: string): Promise<NodeRecord[]>;
   updateById(
     id: string,
+    userId: string,
     updates: Partial<Pick<NodeRecord, "name" | "parentId" | "spaceId" | "metadata" | "images">>
   ): Promise<NodeRecord | null>;
-  deleteById(id: string): Promise<boolean>;
-  countChildren(parentId: string): Promise<number>;
-  countDescendants(spaceId: string): Promise<number>;
+  deleteById(id: string, userId: string): Promise<boolean>;
+  countChildren(parentId: string, userId: string): Promise<number>;
+  countDescendants(spaceId: string, userId: string): Promise<number>;
 }
 
 function normalizeNodeRecord(node: unknown): NodeRecord {
@@ -39,21 +40,22 @@ export class MongooseNodeStore implements NodeStore {
     return normalizeNodeRecord(node.toObject());
   }
 
-  async findById(id: string): Promise<NodeRecord | null> {
-    const node = await NodeModel.findById(id).lean();
+  async findById(id: string, userId: string): Promise<NodeRecord | null> {
+    const node = await NodeModel.findOne({ _id: id, userId }).lean();
 
     return node ? normalizeNodeRecord(node) : null;
   }
 
-  async findByType(type: NodeType): Promise<NodeRecord[]> {
-    const nodes = await NodeModel.find({ type }).sort({ createdAt: 1 }).lean();
+  async findByType(type: NodeType, userId: string): Promise<NodeRecord[]> {
+    const nodes = await NodeModel.find({ type, userId }).sort({ createdAt: 1 }).lean();
 
     return nodes.map(normalizeNodeRecord);
   }
 
-  async findChildrenBySpace(spaceId: string): Promise<NodeRecord[]> {
+  async findChildrenBySpace(spaceId: string, userId: string): Promise<NodeRecord[]> {
     const nodes = await NodeModel.find({
       spaceId,
+      userId,
       type: { $ne: "SPACE" }
     })
       .sort({ createdAt: 1 })
@@ -64,9 +66,10 @@ export class MongooseNodeStore implements NodeStore {
 
   async updateById(
     id: string,
+    userId: string,
     updates: Partial<Pick<NodeRecord, "name" | "parentId" | "spaceId" | "metadata" | "images">>
   ): Promise<NodeRecord | null> {
-    const node = await NodeModel.findByIdAndUpdate(id, updates, {
+    const node = await NodeModel.findOneAndUpdate({ _id: id, userId }, updates, {
       new: true,
       runValidators: true
     }).lean();
@@ -74,18 +77,18 @@ export class MongooseNodeStore implements NodeStore {
     return node ? normalizeNodeRecord(node) : null;
   }
 
-  async deleteById(id: string): Promise<boolean> {
-    const result = await NodeModel.deleteOne({ _id: id });
+  async deleteById(id: string, userId: string): Promise<boolean> {
+    const result = await NodeModel.deleteOne({ _id: id, userId });
 
     return result.deletedCount === 1;
   }
 
-  async countChildren(parentId: string): Promise<number> {
-    return NodeModel.countDocuments({ parentId });
+  async countChildren(parentId: string, userId: string): Promise<number> {
+    return NodeModel.countDocuments({ parentId, userId });
   }
 
-  async countDescendants(spaceId: string): Promise<number> {
-    return NodeModel.countDocuments({ spaceId, type: { $ne: "SPACE" } });
+  async countDescendants(spaceId: string, userId: string): Promise<number> {
+    return NodeModel.countDocuments({ spaceId, userId, type: { $ne: "SPACE" } });
   }
 }
 

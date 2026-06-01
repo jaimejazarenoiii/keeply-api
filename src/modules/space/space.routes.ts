@@ -1,11 +1,16 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import type { SpaceController } from "./space.controller";
 import { spaceController } from "./space.controller";
+import { authMiddleware } from "../../middleware/auth.middleware";
 import { asyncHandler } from "../../utils/async-handler";
 
-export function createSpaceRouter(controller: SpaceController = spaceController): Router {
+export function createSpaceRouter(
+  controller: SpaceController = spaceController,
+  authenticate: RequestHandler = authMiddleware
+): Router {
   const router = Router();
 
+  router.use(authenticate);
   router.get("/", asyncHandler(controller.listSpaces.bind(controller)));
   router.post("/", asyncHandler(controller.createSpace.bind(controller)));
   router.patch("/:spaceId", asyncHandler(controller.updateSpace.bind(controller)));

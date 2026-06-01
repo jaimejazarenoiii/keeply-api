@@ -6,19 +6,34 @@ export interface TestResponse<TBody> {
   body: TBody;
 }
 
+export interface RequestOptions {
+  headers?: Record<string, string>;
+}
+
+export function bearerAuthHeader(accessToken: string): Record<string, string> {
+  return {
+    authorization: `Bearer ${accessToken}`
+  };
+}
+
 export async function requestJson<TBody>(
   app: Express,
   method: string,
   path: string,
-  body?: unknown
+  body?: unknown,
+  options: RequestOptions = {}
 ): Promise<TestResponse<TBody>> {
   const server = app.listen(0);
 
   try {
     const address = server.address() as AddressInfo;
+    const headers = {
+      ...(body === undefined ? {} : { "content-type": "application/json" }),
+      ...options.headers
+    };
     const response = await fetch(`http://127.0.0.1:${address.port}${path}`, {
       method,
-      headers: body === undefined ? undefined : { "content-type": "application/json" },
+      headers: Object.keys(headers).length === 0 ? undefined : headers,
       body: body === undefined ? undefined : JSON.stringify(body)
     });
 
@@ -45,14 +60,16 @@ export async function requestJson<TBody>(
 export async function requestText(
   app: Express,
   method: string,
-  path: string
+  path: string,
+  options: RequestOptions = {}
 ): Promise<TestResponse<string>> {
   const server = app.listen(0);
 
   try {
     const address = server.address() as AddressInfo;
     const response = await fetch(`http://127.0.0.1:${address.port}${path}`, {
-      method
+      method,
+      headers: options.headers
     });
 
     return {

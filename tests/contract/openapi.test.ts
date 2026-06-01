@@ -14,5 +14,6 @@ describe("OpenAPI contract", () => {
     assert.match(contract, /NodeImage:/);
     assert.match(contract, /NodeResponse:/);
     assert.match(contract, /ErrorResponse:/);
+    assert.match(contract, /deleteContainer/);
   });
 });

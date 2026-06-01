@@ -7,6 +7,7 @@ import { ApiError } from "../../utils/errors";
 import { normalizeImages, optionalMetadata, requireNonEmptyString } from "../../utils/validation";
 
 export interface CreateContainerInput {
+  userId: string;
   name: unknown;
   parentId: unknown;
   metadata?: unknown;
@@ -28,7 +29,7 @@ export class ContainerService {
 
   async createContainer(input: CreateContainerInput): Promise<NodeRecord> {
     const parentId = requireNonEmptyString(input.parentId, "parentId");
-    const parent = await this.store.findById(parentId);
+    const parent = await this.store.findById(parentId, input.userId);
 
     if (!parent) {
       throw new ApiError(404, "NOT_FOUND", "Parent not found");
@@ -38,11 +39,13 @@ export class ContainerService {
       childType: "CONTAINER",
       parent
     });
+    hierarchyService.validateOwner(parent, input.userId);
 
     const metadata = optionalMetadata(input.metadata);
 
     return this.store.create({
       _id: new Types.ObjectId().toHexString(),
+      userId: input.userId,
       type: "CONTAINER",
       name: requireNonEmptyString(input.name, "name"),
       parentId: parent._id,
@@ -52,8 +55,8 @@ export class ContainerService {
     });
   }
 
-  async getContainer(containerId: string): Promise<NodeRecord> {
-    const container = await this.store.findById(containerId);
+  async getContainer(containerId: string, userId: string): Promise<NodeRecord> {
+    const container = await this.store.findById(containerId, userId);
 
     if (!container || container.type !== "CONTAINER") {
       throw new ApiError(404, "NOT_FOUND", "Container not found");
@@ -62,23 +65,29 @@ export class ContainerService {
     return container;
   }
 
-  async getContainerTree(containerId: string): Promise<TreeNode> {
-    const container = await this.getContainer(containerId);
-    const descendants = await this.store.findChildrenBySpace(container.spaceId);
+  async getContainerTree(containerId: string, userId: string): Promise<TreeNode> {
+    const container = await this.getContainer(containerId, userId);
+    const descendants = await this.store.findChildrenBySpace(container.spaceId, userId);
+    hierarchyService.validateOwnedDescendants(container, descendants);
 
     return hierarchyService.buildTree(container, descendants);
   }
 
-  async listSubtreeItems(containerId: string): Promise<NodeRecord[]> {
-    const container = await this.getContainer(containerId);
-    const descendants = await this.store.findChildrenBySpace(container.spaceId);
+  async listSubtreeItems(containerId: string, userId: string): Promise<NodeRecord[]> {
+    const container = await this.getContainer(containerId, userId);
+    const descendants = await this.store.findChildrenBySpace(container.spaceId, userId);
+    hierarchyService.validateOwnedDescendants(container, descendants);
     const descendantIds = hierarchyService.getDescendantIds(container._id, descendants);
 
     return descendants.filter((node) => node.type === "ITEM" && descendantIds.has(node._id));
   }
 
-  async updateContainer(containerId: string, input: UpdateContainerInput): Promise<NodeRecord> {
-    await this.getContainer(containerId);
+  async updateContainer(
+    containerId: string,
+    userId: string,
+    input: UpdateContainerInput
+  ): Promise<NodeRecord> {
+    await this.getContainer(containerId, userId);
 
     const updates: Partial<Pick<NodeRecord, "name" | "metadata" | "images">> = {};
 
@@ -98,7 +107,7 @@ export class ContainerService {
       throw new ApiError(400, "VALIDATION_ERROR", "At least one field must be provided");
     }
 
-    const updated = await this.store.updateById(containerId, updates);
+    const updated = await this.store.updateById(containerId, userId, updates);
 
     if (!updated || updated.type !== "CONTAINER") {
       throw new ApiError(404, "NOT_FOUND", "Container not found");
@@ -107,20 +116,24 @@ export class ContainerService {
     return updated;
   }
 
-  async moveContainer(containerId: string, input: MoveContainerInput): Promise<NodeRecord> {
-    const container = await this.getContainer(containerId);
+  async moveContainer(
+    containerId: string,
+    userId: string,
+    input: MoveContainerInput
+  ): Promise<NodeRecord> {
+    const container = await this.getContainer(containerId, userId);
     const parentId = requireNonEmptyString(input.parentId, "parentId");
-    const parent = await this.store.findById(parentId);
+    const parent = await this.store.findById(parentId, userId);
 
     if (!parent) {
       throw new ApiError(404, "NOT_FOUND", "Parent not found");
     }
 
-    const descendants = await this.store.findChildrenBySpace(container.spaceId);
+    const descendants = await this.store.findChildrenBySpace(container.spaceId, userId);
 
     hierarchyService.validateContainerMove(container, parent, descendants);
 
-    const updated = await this.store.updateById(containerId, {
+    const updated = await this.store.updateById(containerId, userId, {
       parentId: parent._id,
       spaceId: hierarchyService.getParentSpaceId(parent)
     });
@@ -130,6 +143,16 @@ export class ContainerService {
     }
 
     return updated;
+  }
+
+  async deleteContainer(containerId: string, userId: string): Promise<void> {
+    await this.getContainer(containerId, userId);
+
+    if ((await this.store.countChildren(containerId, userId)) > 0) {
+      throw new ApiError(400, "INVALID_MOVE", "Cannot delete a non-empty Container");
+    }
+
+    await this.store.deleteById(containerId, userId);
   }
 }
 

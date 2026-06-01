@@ -9,12 +9,14 @@ function createNode(
   type: NodeType,
   name: string,
   parentId: string | null,
-  spaceId = "space-1"
+  spaceId = "space-1",
+  userId = "user-1"
 ): NodeRecord {
   const now = new Date();
 
   return {
     _id: id,
+    userId,
     type,
     name,
     parentId,
@@ -98,6 +100,38 @@ describe("HierarchyService", () => {
       () => service.validateContainerMove(shelf, bin, [bin]),
       (error) =>
         error instanceof ApiError && error.statusCode === 400 && error.code === "CIRCULAR_REFERENCE"
+    );
+  });
+
+  it("rejects nodes owned by another user", () => {
+    const service = new HierarchyService();
+    const node = createNode("space-1", "SPACE", "Garage", null, "space-1", "user-2");
+
+    assert.throws(
+      () => service.validateOwner(node, "user-1"),
+      (error) => error instanceof ApiError && error.statusCode === 404 && error.code === "NOT_FOUND"
+    );
+  });
+
+  it("rejects parent relationships across owners", () => {
+    const service = new HierarchyService();
+    const shelf = createNode("container-1", "CONTAINER", "Shelf A", "space-1", "space-1", "user-1");
+    const bin = createNode("container-2", "CONTAINER", "Bin 1", "space-2", "space-2", "user-2");
+
+    assert.throws(
+      () => service.validateSameOwner(shelf, bin),
+      (error) => error instanceof ApiError && error.statusCode === 404 && error.code === "NOT_FOUND"
+    );
+  });
+
+  it("rejects descendant lists containing another user's nodes", () => {
+    const service = new HierarchyService();
+    const shelf = createNode("container-1", "CONTAINER", "Shelf A", "space-1", "space-1", "user-1");
+    const bin = createNode("container-2", "CONTAINER", "Bin 1", "container-1", "space-1", "user-2");
+
+    assert.throws(
+      () => service.validateOwnedDescendants(shelf, [bin]),
+      (error) => error instanceof ApiError && error.statusCode === 404 && error.code === "NOT_FOUND"
     );
   });
 });

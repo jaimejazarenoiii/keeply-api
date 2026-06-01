@@ -132,6 +132,21 @@ Invoke-RestMethod -Method Patch -Uri "http://localhost:3000/containers/$($shelf.
 The path response should include `Garage > Shelf A > Cable Bin > Extension Cord`.
 The final move command should be rejected with `CIRCULAR_REFERENCE`.
 
+## Container Delete Flow
+
+Use these PowerShell commands to verify empty-only Container deletion:
+
+```powershell
+$emptyContainer = Invoke-RestMethod -Method Post -Uri http://localhost:3000/containers `
+  -ContentType "application/json" `
+  -Body (@{ name = "Empty Tote"; parentId = $space.data.id } | ConvertTo-Json)
+
+Invoke-RestMethod -Method Delete -Uri "http://localhost:3000/containers/$($emptyContainer.data.id)"
+```
+
+Deleting a Container that still has child Containers or Items should return a
+`400` error. Delete or move its contents first, then retry the Container delete.
+
 ## Manual Verification Flow
 
 1. Create a Space named `Garage`.
@@ -157,6 +172,10 @@ Garage > Extension Cord
 
 12. Attempt to move `Shelf A` under `Cable Bin` and verify the API rejects the
     circular move with `CIRCULAR_REFERENCE`.
+13. Create an empty Container, delete it, and verify it no longer appears in the
+    Space tree.
+14. Attempt to delete a non-empty Container and verify the API rejects it with
+    `INVALID_MOVE`.
 
 ## Required Checks
 

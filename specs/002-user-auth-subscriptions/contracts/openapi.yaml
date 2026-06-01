@@ -1,0 +1,332 @@
+openapi: 3.1.0
+info:
+  title: Keeply Authorization and Subscription API
+  version: 1.0.0
+  description: >
+    Contract additions for first-party registration, JWT authorization, user
+    profile retrieval, protected storage access, and RevenueCat-ready
+    subscription state.
+servers:
+  - url: http://localhost:3000
+paths:
+  /auth/register:
+    post:
+      summary: Register a user
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered and tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /auth/login:
+    post:
+      summary: Log in a user
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login accepted and tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/refresh:
+    post:
+      summary: Refresh an access token
+      operationId: refreshAuthToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/logout:
+    post:
+      summary: Revoke a refresh session
+      operationId: logoutUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "204":
+          description: Session revoked
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/me:
+    get:
+      summary: Get current user profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /subscription/status:
+    get:
+      summary: Get current subscription status
+      operationId: getSubscriptionStatus
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Subscription status returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionStatusResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /subscriptions/revenuecat/webhook:
+    post:
+      summary: Receive RevenueCat subscription event
+      operationId: receiveRevenueCatWebhook
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Shared webhook authorization value configured in env.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Event accepted or replay safely ignored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionEventAcceptedResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /spaces:
+    get:
+      summary: List spaces for the authenticated user
+      operationId: listOwnedSpaces
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Owned spaces returned
+        "401":
+          $ref: "#/components/responses/Error"
+    post:
+      summary: Create a space for the authenticated user
+      operationId: createOwnedSpace
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Owned space created
+        "401":
+          $ref: "#/components/responses/Error"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+          minLength: 1
+        profileImageUrl:
+          type: string
+          format: uri
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          minLength: 32
+    AuthUser:
+      type: object
+      required:
+        - id
+        - email
+        - name
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        profileImageUrl:
+          type: string
+          format: uri
+    AuthToken:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - tokenType
+        - expiresIn
+        - user
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+          const: Bearer
+        expiresIn:
+          type: integer
+          minimum: 1
+        user:
+          $ref: "#/components/schemas/AuthUser"
+    AuthTokenResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AuthToken"
+    AuthUserResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AuthUser"
+    SubscriptionStatus:
+      type: object
+      required:
+        - entitlements
+      properties:
+        entitlements:
+          type: array
+          items:
+            type: object
+            required:
+              - key
+              - status
+            properties:
+              key:
+                type: string
+              status:
+                type: string
+                enum:
+                  - ACTIVE
+                  - INACTIVE
+                  - EXPIRED
+                  - REVOKED
+                  - UNKNOWN
+              currentPeriodEndsAt:
+                type: string
+                format: date-time
+    SubscriptionStatusResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/SubscriptionStatus"
+    SubscriptionEventAcceptedResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - accepted
+          properties:
+            accepted:
+              type: boolean
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+  responses:
+    Error:
+      description: API error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

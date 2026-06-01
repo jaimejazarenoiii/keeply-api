@@ -30,6 +30,18 @@ export class HierarchyService {
     }
   }
 
+  validateOwner(node: NodeRecord, userId: string): void {
+    ensureOwnedBy(node, userId);
+  }
+
+  validateSameOwner(first: NodeRecord, second: NodeRecord): void {
+    ensureSameOwner(first, second);
+  }
+
+  validateOwnedDescendants(root: NodeRecord, descendants: NodeRecord[]): void {
+    ensureDescendantsOwnedBy(root, descendants);
+  }
+
   getParentSpaceId(parent: NodeRecord): string {
     return parent.type === "SPACE" ? parent._id : parent.spaceId;
   }
@@ -44,6 +56,8 @@ export class HierarchyService {
       childId: container._id,
       parent
     });
+    this.validateSameOwner(container, parent);
+    this.validateOwnedDescendants(container, descendants);
 
     if (parent.type !== "SPACE" && container.spaceId !== parent.spaceId) {
       throw new ApiError(400, "SPACE_MISMATCH", "Parent must belong to the same Space");
@@ -144,3 +158,25 @@ export class HierarchyService {
 }
 
 export const hierarchyService = new HierarchyService();
+
+function ensureOwnedBy(node: NodeRecord, userId: string): void {
+  if (node.userId !== userId) {
+    throwNotFoundForPrivateNode();
+  }
+}
+
+function ensureSameOwner(first: NodeRecord, second: NodeRecord): void {
+  if (first.userId !== second.userId) {
+    throwNotFoundForPrivateNode();
+  }
+}
+
+function ensureDescendantsOwnedBy(root: NodeRecord, descendants: NodeRecord[]): void {
+  if (descendants.some((descendant) => descendant.userId !== root.userId)) {
+    throwNotFoundForPrivateNode();
+  }
+}
+
+function throwNotFoundForPrivateNode(): never {
+  throw new ApiError(404, "NOT_FOUND", "Node not found");
+}

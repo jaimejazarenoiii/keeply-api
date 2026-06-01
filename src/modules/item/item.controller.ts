@@ -3,14 +3,20 @@ import type { ItemService } from "./item.service";
 import { itemService } from "./item.service";
 import type { ItemPathResponse, NodeResponse } from "../../types/api";
 import { toNodeDto } from "../../utils/node-response";
-import { requireNonEmptyString, requireObjectBody } from "../../utils/validation";
+import {
+  requireAuthenticatedUser,
+  requireNonEmptyString,
+  requireObjectBody
+} from "../../utils/validation";
 
 export class ItemController {
   constructor(private readonly service: ItemService = itemService) {}
 
   async createItem(req: Request, res: Response<NodeResponse>): Promise<void> {
+    const user = requireAuthenticatedUser(req.user);
     const body = requireObjectBody(req.body);
     const item = await this.service.createItem({
+      userId: user.id,
       name: body.name,
       parentId: body.parentId,
       metadata: body.metadata,
@@ -22,15 +28,17 @@ export class ItemController {
 
   async getItem(req: Request, res: Response<NodeResponse>): Promise<void> {
     const itemId = requireNonEmptyString(req.params.itemId, "itemId");
-    const item = await this.service.getItem(itemId);
+    const user = requireAuthenticatedUser(req.user);
+    const item = await this.service.getItem(itemId, user.id);
 
     res.status(200).json({ data: toNodeDto(item) });
   }
 
   async updateItem(req: Request, res: Response<NodeResponse>): Promise<void> {
     const itemId = requireNonEmptyString(req.params.itemId, "itemId");
+    const user = requireAuthenticatedUser(req.user);
     const body = requireObjectBody(req.body);
-    const item = await this.service.updateItem(itemId, {
+    const item = await this.service.updateItem(itemId, user.id, {
       name: body.name,
       metadata: body.metadata,
       images: body.images
@@ -41,8 +49,9 @@ export class ItemController {
 
   async moveItem(req: Request, res: Response<NodeResponse>): Promise<void> {
     const itemId = requireNonEmptyString(req.params.itemId, "itemId");
+    const user = requireAuthenticatedUser(req.user);
     const body = requireObjectBody(req.body);
-    const item = await this.service.moveItem(itemId, {
+    const item = await this.service.moveItem(itemId, user.id, {
       parentId: body.parentId
     });
 
@@ -51,15 +60,17 @@ export class ItemController {
 
   async deleteItem(req: Request, res: Response): Promise<void> {
     const itemId = requireNonEmptyString(req.params.itemId, "itemId");
+    const user = requireAuthenticatedUser(req.user);
 
-    await this.service.deleteItem(itemId);
+    await this.service.deleteItem(itemId, user.id);
 
     res.status(204).send();
   }
 
   async getItemPath(req: Request, res: Response<ItemPathResponse>): Promise<void> {
     const itemId = requireNonEmptyString(req.params.itemId, "itemId");
-    const itemPath = await this.service.getItemPath(itemId);
+    const user = requireAuthenticatedUser(req.user);
+    const itemPath = await this.service.getItemPath(itemId, user.id);
 
     res.status(200).json({ data: itemPath });
   }

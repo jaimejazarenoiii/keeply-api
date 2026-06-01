@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { AuthenticatedUser } from "../types/auth";
 import type { NodeImage } from "../types/node";
 import { ApiError } from "./errors";
 
@@ -22,6 +23,14 @@ export function requireObjectBody(value: unknown): Record<string, unknown> {
   }
 
   return value as Record<string, unknown>;
+}
+
+export function requireAuthenticatedUser(user: AuthenticatedUser | undefined): AuthenticatedUser {
+  if (!user) {
+    throw new ApiError(401, "AUTHENTICATION_REQUIRED", "Authentication is required");
+  }
+
+  return user;
 }
 
 export function optionalMetadata(value: unknown): Record<string, unknown> | undefined {

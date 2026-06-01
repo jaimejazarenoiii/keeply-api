@@ -7,6 +7,7 @@ import { normalizeImages, optionalMetadata, requireNonEmptyString } from "../../
 import { hierarchyService } from "../../services/hierarchy.service";
 
 export interface CreateSpaceInput {
+  userId: string;
   name: unknown;
   metadata?: unknown;
   images?: unknown;
@@ -26,6 +27,7 @@ export class SpaceService {
 
     return this.store.create({
       _id: id,
+      userId: input.userId,
       type: "SPACE",
       name: requireNonEmptyString(input.name, "name"),
       parentId: null,
@@ -35,12 +37,12 @@ export class SpaceService {
     });
   }
 
-  async listSpaces(): Promise<NodeRecord[]> {
-    return this.store.findByType("SPACE");
+  async listSpaces(userId: string): Promise<NodeRecord[]> {
+    return this.store.findByType("SPACE", userId);
   }
 
-  async getSpace(spaceId: string): Promise<NodeRecord> {
-    const space = await this.store.findById(spaceId);
+  async getSpace(spaceId: string, userId: string): Promise<NodeRecord> {
+    const space = await this.store.findById(spaceId, userId);
 
     if (!space || space.type !== "SPACE") {
       throw new ApiError(404, "NOT_FOUND", "Space not found");
@@ -49,15 +51,15 @@ export class SpaceService {
     return space;
   }
 
-  async getSpaceTree(spaceId: string): Promise<TreeNode> {
-    const space = await this.getSpace(spaceId);
-    const descendants = await this.store.findChildrenBySpace(space._id);
+  async getSpaceTree(spaceId: string, userId: string): Promise<TreeNode> {
+    const space = await this.getSpace(spaceId, userId);
+    const descendants = await this.store.findChildrenBySpace(space._id, userId);
 
     return hierarchyService.buildTree(space, descendants);
   }
 
-  async updateSpace(spaceId: string, input: UpdateSpaceInput): Promise<NodeRecord> {
-    await this.getSpace(spaceId);
+  async updateSpace(spaceId: string, userId: string, input: UpdateSpaceInput): Promise<NodeRecord> {
+    await this.getSpace(spaceId, userId);
 
     const updates: Partial<Pick<NodeRecord, "name" | "metadata" | "images">> = {};
 
@@ -77,7 +79,7 @@ export class SpaceService {
       throw new ApiError(400, "VALIDATION_ERROR", "At least one field must be provided");
     }
 
-    const updated = await this.store.updateById(spaceId, updates);
+    const updated = await this.store.updateById(spaceId, userId, updates);
 
     if (!updated) {
       throw new ApiError(404, "NOT_FOUND", "Space not found");
@@ -86,14 +88,14 @@ export class SpaceService {
     return updated;
   }
 
-  async deleteSpace(spaceId: string): Promise<void> {
-    await this.getSpace(spaceId);
+  async deleteSpace(spaceId: string, userId: string): Promise<void> {
+    await this.getSpace(spaceId, userId);
 
-    if ((await this.store.countDescendants(spaceId)) > 0) {
+    if ((await this.store.countDescendants(spaceId, userId)) > 0) {
       throw new ApiError(400, "INVALID_MOVE", "Cannot delete a non-empty Space");
     }
 
-    await this.store.deleteById(spaceId);
+    await this.store.deleteById(spaceId, userId);
   }
 }
 

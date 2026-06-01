@@ -41,6 +41,11 @@ const imageSchema = new Schema<NodeImage>(
 
 const nodeSchema = new Schema<NodeRecord>(
   {
+    userId: {
+      type: String,
+      required: true,
+      index: true
+    },
     type: {
       type: String,
       enum: nodeTypes,
@@ -77,6 +82,10 @@ const nodeSchema = new Schema<NodeRecord>(
 nodeSchema.index({ parentId: 1 });
 nodeSchema.index({ spaceId: 1, parentId: 1 });
 nodeSchema.index({ type: 1, spaceId: 1 });
+nodeSchema.index({ userId: 1, type: 1 });
+nodeSchema.index({ userId: 1, parentId: 1 });
+nodeSchema.index({ userId: 1, spaceId: 1 });
+nodeSchema.index({ userId: 1, type: 1, spaceId: 1 });
 
 export const NodeModel =
   (models.Node as NodeModel | undefined) ?? model<NodeRecord>("Node", nodeSchema);

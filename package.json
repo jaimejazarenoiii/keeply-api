@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run build && node --test \"dist/tests/**/*.test.js\""
+    "test": "npm run build && node --test --test-concurrency=1 \"dist/tests/**/*.test.js\""
   },
   "keywords": [
     "storage",
@@ -25,6 +25,7 @@
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",
+    "jose": "^6.2.3",
     "mongoose": "latest",
     "swagger-ui-express": "^5.0.1",
     "yaml": "^2.9.0"

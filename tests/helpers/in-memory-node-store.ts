@@ -17,27 +17,30 @@ export class InMemoryNodeStore implements NodeStore {
     return node;
   }
 
-  async findById(id: string): Promise<NodeRecord | null> {
-    return this.nodes.get(id) ?? null;
+  async findById(id: string, userId: string): Promise<NodeRecord | null> {
+    const node = this.nodes.get(id);
+
+    return node?.userId === userId ? node : null;
   }
 
-  async findByType(type: NodeType): Promise<NodeRecord[]> {
-    return [...this.nodes.values()].filter((node) => node.type === type);
+  async findByType(type: NodeType, userId: string): Promise<NodeRecord[]> {
+    return [...this.nodes.values()].filter((node) => node.type === type && node.userId === userId);
   }
 
-  async findChildrenBySpace(spaceId: string): Promise<NodeRecord[]> {
+  async findChildrenBySpace(spaceId: string, userId: string): Promise<NodeRecord[]> {
     return [...this.nodes.values()].filter(
-      (node) => node.spaceId === spaceId && node.type !== "SPACE"
+      (node) => node.spaceId === spaceId && node.userId === userId && node.type !== "SPACE"
     );
   }
 
   async updateById(
     id: string,
+    userId: string,
     updates: Partial<Pick<NodeRecord, "name" | "parentId" | "spaceId" | "metadata" | "images">>
   ): Promise<NodeRecord | null> {
     const node = this.nodes.get(id);
 
-    if (!node) {
+    if (!node || node.userId !== userId) {
       return null;
     }
 
@@ -52,17 +55,25 @@ export class InMemoryNodeStore implements NodeStore {
     return updated;
   }
 
-  async deleteById(id: string): Promise<boolean> {
+  async deleteById(id: string, userId: string): Promise<boolean> {
+    const node = this.nodes.get(id);
+
+    if (!node || node.userId !== userId) {
+      return false;
+    }
+
     return this.nodes.delete(id);
   }
 
-  async countChildren(parentId: string): Promise<number> {
-    return [...this.nodes.values()].filter((node) => node.parentId === parentId).length;
+  async countChildren(parentId: string, userId: string): Promise<number> {
+    return [...this.nodes.values()].filter(
+      (node) => node.parentId === parentId && node.userId === userId
+    ).length;
   }
 
-  async countDescendants(spaceId: string): Promise<number> {
+  async countDescendants(spaceId: string, userId: string): Promise<number> {
     return [...this.nodes.values()].filter(
-      (node) => node.spaceId === spaceId && node.type !== "SPACE"
+      (node) => node.spaceId === spaceId && node.userId === userId && node.type !== "SPACE"
     ).length;
   }
 }

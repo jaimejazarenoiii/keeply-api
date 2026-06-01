@@ -7,6 +7,7 @@ import { ApiError } from "../../utils/errors";
 import { normalizeImages, optionalMetadata, requireNonEmptyString } from "../../utils/validation";
 
 export interface CreateItemInput {
+  userId: string;
   name: unknown;
   parentId: unknown;
   metadata?: unknown;
@@ -27,11 +28,12 @@ export class ItemService {
   constructor(private readonly store: NodeStore = nodeStore) {}
 
   async createItem(input: CreateItemInput): Promise<NodeRecord> {
-    const parent = await this.getValidParent(input.parentId);
+    const parent = await this.getValidParent(input.parentId, input.userId);
     const metadata = optionalMetadata(input.metadata);
 
     return this.store.create({
       _id: new Types.ObjectId().toHexString(),
+      userId: input.userId,
       type: "ITEM",
       name: requireNonEmptyString(input.name, "name"),
       parentId: parent._id,
@@ -41,8 +43,8 @@ export class ItemService {
     });
   }
 
-  async getItem(itemId: string): Promise<NodeRecord> {
-    const item = await this.store.findById(itemId);
+  async getItem(itemId: string, userId: string): Promise<NodeRecord> {
+    const item = await this.store.findById(itemId, userId);
 
     if (!item || item.type !== "ITEM") {
       throw new ApiError(404, "NOT_FOUND", "Item not found");
@@ -51,8 +53,8 @@ export class ItemService {
     return item;
   }
 
-  async updateItem(itemId: string, input: UpdateItemInput): Promise<NodeRecord> {
-    await this.getItem(itemId);
+  async updateItem(itemId: string, userId: string, input: UpdateItemInput): Promise<NodeRecord> {
+    await this.getItem(itemId, userId);
 
     const updates: Partial<Pick<NodeRecord, "name" | "metadata" | "images">> = {};
 
@@ -72,7 +74,7 @@ export class ItemService {
       throw new ApiError(400, "VALIDATION_ERROR", "At least one field must be provided");
     }
 
-    const updated = await this.store.updateById(itemId, updates);
+    const updated = await this.store.updateById(itemId, userId, updates);
 
     if (!updated || updated.type !== "ITEM") {
       throw new ApiError(404, "NOT_FOUND", "Item not found");
@@ -81,11 +83,11 @@ export class ItemService {
     return updated;
   }
 
-  async moveItem(itemId: string, input: MoveItemInput): Promise<NodeRecord> {
-    await this.getItem(itemId);
+  async moveItem(itemId: string, userId: string, input: MoveItemInput): Promise<NodeRecord> {
+    await this.getItem(itemId, userId);
 
-    const parent = await this.getValidParent(input.parentId);
-    const updated = await this.store.updateById(itemId, {
+    const parent = await this.getValidParent(input.parentId, userId);
+    const updated = await this.store.updateById(itemId, userId, {
       parentId: parent._id,
       spaceId: hierarchyService.getParentSpaceId(parent)
     });
@@ -97,15 +99,15 @@ export class ItemService {
     return updated;
   }
 
-  async deleteItem(itemId: string): Promise<void> {
-    await this.getItem(itemId);
-    await this.store.deleteById(itemId);
+  async deleteItem(itemId: string, userId: string): Promise<void> {
+    await this.getItem(itemId, userId);
+    await this.store.deleteById(itemId, userId);
   }
 
-  async getItemPath(itemId: string): Promise<ItemPath> {
-    const item = await this.getItem(itemId);
+  async getItemPath(itemId: string, userId: string): Promise<ItemPath> {
+    const item = await this.getItem(itemId, userId);
     const path = await hierarchyService.buildAncestorPath(item, (nodeId) =>
-      this.store.findById(nodeId)
+      this.store.findById(nodeId, userId)
     );
 
     return {
@@ -114,9 +116,9 @@ export class ItemService {
     };
   }
 
-  private async getValidParent(parentIdInput: unknown): Promise<NodeRecord> {
+  private async getValidParent(parentIdInput: unknown, userId: string): Promise<NodeRecord> {
     const parentId = requireNonEmptyString(parentIdInput, "parentId");
-    const parent = await this.store.findById(parentId);
+    const parent = await this.store.findById(parentId, userId);
 
     if (!parent) {
       throw new ApiError(404, "NOT_FOUND", "Parent not found");
@@ -126,6 +128,7 @@ export class ItemService {
       childType: "ITEM",
       parent
     });
+    hierarchyService.validateOwner(parent, userId);
 
     return parent;
   }

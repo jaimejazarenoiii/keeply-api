@@ -10,6 +10,7 @@ export interface NodeImage {
 
 export interface NodeRecord {
   _id: string;
+  userId: string;
   type: NodeType;
   name: string;
   parentId: string | null;
