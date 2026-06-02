@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import type { RequestHandler } from "express";
+import { env } from "./config/env";
 import { createAuthMiddleware } from "./middleware/auth.middleware";
 import { errorMiddleware } from "./middleware/error.middleware";
 import type { AuthStore } from "./models/auth.store";
@@ -92,7 +93,5 @@ export function createApp(dependencies: AppDependencies = {}): express.Express {
 export const app = createApp();
 
 async function verifyAccessTokenWithEnvironment(token: string) {
-  const { env } = await import("./config/env.js");
-
   return verifyAccessToken(token, env.jwt);
 }

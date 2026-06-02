@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import type { AccessTokenConfig } from "../../utils/tokens";
 import type { AuthStore } from "../../models/auth.store";
 import { authStore } from "../../models/auth.store";
+import { env } from "../../config/env";
 import type { AuthTokenDto, AuthUserDto, UserRecord } from "../../types/auth";
 import { ApiError } from "../../utils/errors";
 import { hashPassword, verifyPassword } from "../../utils/password";
@@ -164,8 +165,6 @@ export class AuthService {
     if (this.tokenConfig) {
       return this.tokenConfig;
     }
-
-    const { env } = await import("../../config/env.js");
 
     return env.jwt;
   }

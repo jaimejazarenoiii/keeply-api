@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import { env } from "../config/env";
 import { ApiError } from "../utils/errors";
 import { verifyAccessToken } from "../utils/tokens";
 import type { AccessTokenClaims } from "../types/auth";
@@ -6,8 +7,6 @@ import type { AccessTokenClaims } from "../types/auth";
 type AccessTokenVerifier = (token: string) => Promise<AccessTokenClaims>;
 
 async function verifyWithEnvironment(token: string): Promise<AccessTokenClaims> {
-  const { env } = await import("../config/env.js");
-
   return verifyAccessToken(token, env.jwt);
 }
 
