@@ -20,7 +20,10 @@ export class ItemController {
       name: body.name,
       parentId: body.parentId,
       metadata: body.metadata,
-      images: body.images
+      images: body.images,
+      tags: body.tags,
+      description: body.description,
+      quantity: body.quantity
     });
 
     res.status(201).json({ data: toNodeDto(item) });
@@ -41,7 +44,10 @@ export class ItemController {
     const item = await this.service.updateItem(itemId, user.id, {
       name: body.name,
       metadata: body.metadata,
-      images: body.images
+      images: body.images,
+      tags: body.tags,
+      description: body.description,
+      quantity: body.quantity
     });
 
     res.status(200).json({ data: toNodeDto(item) });

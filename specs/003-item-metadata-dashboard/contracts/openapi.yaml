@@ -1,0 +1,582 @@
+openapi: 3.1.0
+info:
+  title: Keeply Item Metadata and Dashboard API
+  version: 1.0.0
+  description: >
+    Contract additions for node metadata fields (tags and description on Spaces,
+    Containers, and Items; quantity on Items only), an authenticated storage
+    dashboard summary endpoint, and text search across nodes.
+servers:
+  - url: http://localhost:3000
+paths:
+  /dashboard:
+    get:
+      summary: Get storage dashboard summary
+      operationId: getDashboardSummary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard summary returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /search:
+    get:
+      summary: Search spaces, containers, and items by text
+      description: >
+        Provide a single search string (`q`). The backend matches it against each
+        node's name, description, and tags (case-insensitive substring match).
+      operationId: searchNodes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search text
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [SPACE, CONTAINER, ITEM]
+          description: Restrict results to one or more node types (comma-separated)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Maximum number of results to return
+      responses:
+        "200":
+          description: Matching nodes returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeListResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /items:
+    post:
+      summary: Create an item
+      operationId: createItemWithMetadata
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest"
+      responses:
+        "201":
+          description: Item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /items/{itemId}:
+    patch:
+      summary: Update an item
+      operationId: updateItemWithMetadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateItemRequest"
+      responses:
+        "200":
+          description: Item updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /spaces:
+    post:
+      summary: Create a space
+      operationId: createSpaceWithMetadata
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSpaceRequest"
+      responses:
+        "201":
+          description: Space created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /spaces/{spaceId}:
+    patch:
+      summary: Update a space
+      operationId: updateSpaceWithMetadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SpaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceContainerRequest"
+      responses:
+        "200":
+          description: Space updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /containers:
+    post:
+      summary: Create a container
+      operationId: createContainerWithMetadata
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContainerRequest"
+      responses:
+        "201":
+          description: Container created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /containers/{containerId}:
+    patch:
+      summary: Update a container
+      operationId: updateContainerWithMetadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ContainerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceContainerRequest"
+      responses:
+        "200":
+          description: Container updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+    SpaceId:
+      name: spaceId
+      in: path
+      required: true
+      schema:
+        type: string
+    ContainerId:
+      name: containerId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    NodeType:
+      type: string
+      enum:
+        - SPACE
+        - CONTAINER
+        - ITEM
+    NodeImage:
+      type: object
+      required:
+        - id
+        - url
+        - sortOrder
+        - createdAt
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        altText:
+          type: string
+        sortOrder:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+    Node:
+      type: object
+      required:
+        - id
+        - type
+        - name
+        - parentId
+        - spaceId
+        - images
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/NodeType"
+        name:
+          type: string
+        parentId:
+          type:
+            - string
+            - "null"
+        spaceId:
+          type: string
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeImage"
+        metadata:
+          type: object
+          additionalProperties: true
+        quantity:
+          type: integer
+          minimum: 0
+          description: Item-only count. Defaults to 1 when omitted in storage.
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TreeNode:
+      allOf:
+        - $ref: "#/components/schemas/Node"
+        - type: object
+          properties:
+            children:
+              type: array
+              items:
+                $ref: "#/components/schemas/TreeNode"
+    PathSegment:
+      type: object
+      required:
+        - id
+        - type
+        - name
+        - images
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/NodeType"
+        name:
+          type: string
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeImage"
+        quantity:
+          type: integer
+          minimum: 0
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+    CreateSpaceRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeImageInput"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+    CreateContainerRequest:
+      type: object
+      required:
+        - name
+        - parentId
+      properties:
+        name:
+          type: string
+        parentId:
+          type: string
+          description: Space or Container parent identifier.
+        metadata:
+          type: object
+          additionalProperties: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeImageInput"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+    UpdateSpaceContainerRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeImageInput"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+    CreateItemRequest:
+      type: object
+      required:
+        - name
+        - parentId
+      properties:
+        name:
+          type: string
+        parentId:
+          type: string
+          description: Space or Container parent identifier.
+        metadata:
+          type: object
+          additionalProperties: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeImageInput"
+        quantity:
+          type: integer
+          minimum: 0
+          description: Defaults to 1 in responses when omitted.
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+    UpdateItemRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeImageInput"
+        quantity:
+          type: integer
+          minimum: 0
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+    NodeImageInput:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+        altText:
+          type: string
+        sortOrder:
+          type: integer
+          minimum: 0
+    NodeResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/Node"
+    NodeListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Node"
+    DashboardCounts:
+      type: object
+      required:
+        - spaces
+        - containers
+        - items
+      properties:
+        spaces:
+          type: integer
+          minimum: 0
+        containers:
+          type: integer
+          minimum: 0
+        items:
+          type: integer
+          minimum: 0
+    DashboardSummary:
+      type: object
+      required:
+        - counts
+        - recent
+      properties:
+        counts:
+          $ref: "#/components/schemas/DashboardCounts"
+        recent:
+          type: object
+          required:
+            - spaces
+            - containers
+            - items
+          properties:
+            spaces:
+              type: array
+              maxItems: 5
+              items:
+                $ref: "#/components/schemas/Node"
+            containers:
+              type: array
+              maxItems: 5
+              items:
+                $ref: "#/components/schemas/Node"
+            items:
+              type: array
+              maxItems: 10
+              items:
+                $ref: "#/components/schemas/Node"
+    DashboardSummaryResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/DashboardSummary"
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - AUTHENTICATION_REQUIRED
+                - VALIDATION_ERROR
+                - NOT_FOUND
+                - INTERNAL_ERROR
+            message:
+              type: string

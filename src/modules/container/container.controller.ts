@@ -20,7 +20,10 @@ export class ContainerController {
       name: body.name,
       parentId: body.parentId,
       metadata: body.metadata,
-      images: body.images
+      images: body.images,
+      tags: body.tags,
+      description: body.description,
+      quantity: body.quantity
     });
 
     res.status(201).json({ data: toNodeDto(container) });
@@ -49,7 +52,10 @@ export class ContainerController {
     const container = await this.service.updateContainer(containerId, user.id, {
       name: body.name,
       metadata: body.metadata,
-      images: body.images
+      images: body.images,
+      tags: body.tags,
+      description: body.description,
+      quantity: body.quantity
     });
 
     res.status(200).json({ data: toNodeDto(container) });

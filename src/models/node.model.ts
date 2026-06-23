@@ -71,6 +71,18 @@ const nodeSchema = new Schema<NodeRecord>(
     },
     metadata: {
       type: Schema.Types.Mixed
+    },
+    tags: {
+      type: [String],
+      default: undefined
+    },
+    description: {
+      type: String,
+      trim: true
+    },
+    quantity: {
+      type: Number,
+      min: 0
     }
   },
   {
@@ -86,6 +98,7 @@ nodeSchema.index({ userId: 1, type: 1 });
 nodeSchema.index({ userId: 1, parentId: 1 });
 nodeSchema.index({ userId: 1, spaceId: 1 });
 nodeSchema.index({ userId: 1, type: 1, spaceId: 1 });
+nodeSchema.index({ userId: 1, type: 1, updatedAt: -1, createdAt: -1 });
 
 export const NodeModel =
   (models.Node as NodeModel | undefined) ?? model<NodeRecord>("Node", nodeSchema);

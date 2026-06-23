@@ -19,7 +19,10 @@ export class SpaceController {
       userId: user.id,
       name: body.name,
       metadata: body.metadata,
-      images: body.images
+      images: body.images,
+      tags: body.tags,
+      description: body.description,
+      quantity: body.quantity
     });
 
     res.status(201).json({ data: toNodeDto(space) });
@@ -47,7 +50,10 @@ export class SpaceController {
     const space = await this.service.updateSpace(spaceId, user.id, {
       name: body.name,
       metadata: body.metadata,
-      images: body.images
+      images: body.images,
+      tags: body.tags,
+      description: body.description,
+      quantity: body.quantity
     });
 
     res.status(200).json({ data: toNodeDto(space) });

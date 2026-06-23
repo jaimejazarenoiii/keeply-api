@@ -28,3 +28,20 @@ export type AuthUserResponse = ApiSuccessResponse<AuthUserDto>;
 export type SubscriptionStatusResponse = ApiSuccessResponse<SubscriptionStatusDto>;
 
 export type SubscriptionEventAcceptedResponse = ApiSuccessResponse<SubscriptionEventAcceptedDto>;
+
+export interface DashboardCounts {
+  spaces: number;
+  containers: number;
+  items: number;
+}
+
+export interface DashboardSummary {
+  counts: DashboardCounts;
+  recent: {
+    spaces: NodeDto[];
+    containers: NodeDto[];
+    items: NodeDto[];
+  };
+}
+
+export type DashboardSummaryResponse = ApiSuccessResponse<DashboardSummary>;

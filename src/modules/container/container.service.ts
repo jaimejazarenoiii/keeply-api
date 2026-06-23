@@ -4,7 +4,14 @@ import { nodeStore } from "../../models/node.store";
 import { hierarchyService } from "../../services/hierarchy.service";
 import type { NodeRecord, TreeNode } from "../../types/node";
 import { ApiError } from "../../utils/errors";
-import { normalizeImages, optionalMetadata, requireNonEmptyString } from "../../utils/validation";
+import {
+  normalizeImages,
+  optionalMetadata,
+  parseTagsAndDescriptionForCreate,
+  parseTagsAndDescriptionForUpdate,
+  rejectQuantityForNonItem,
+  requireNonEmptyString
+} from "../../utils/validation";
 
 export interface CreateContainerInput {
   userId: string;
@@ -12,12 +19,18 @@ export interface CreateContainerInput {
   parentId: unknown;
   metadata?: unknown;
   images?: unknown;
+  tags?: unknown;
+  description?: unknown;
+  quantity?: unknown;
 }
 
 export interface UpdateContainerInput {
   name?: unknown;
   metadata?: unknown;
   images?: unknown;
+  tags?: unknown;
+  description?: unknown;
+  quantity?: unknown;
 }
 
 export interface MoveContainerInput {
@@ -28,6 +41,8 @@ export class ContainerService {
   constructor(private readonly store: NodeStore = nodeStore) {}
 
   async createContainer(input: CreateContainerInput): Promise<NodeRecord> {
+    rejectQuantityForNonItem("CONTAINER", input.quantity);
+
     const parentId = requireNonEmptyString(input.parentId, "parentId");
     const parent = await this.store.findById(parentId, input.userId);
 
@@ -42,6 +57,7 @@ export class ContainerService {
     hierarchyService.validateOwner(parent, input.userId);
 
     const metadata = optionalMetadata(input.metadata);
+    const nodeMetadata = parseTagsAndDescriptionForCreate(input);
 
     return this.store.create({
       _id: new Types.ObjectId().toHexString(),
@@ -51,7 +67,8 @@ export class ContainerService {
       parentId: parent._id,
       spaceId: hierarchyService.getParentSpaceId(parent),
       images: normalizeImages(input.images),
-      ...(metadata ? { metadata } : {})
+      ...(metadata ? { metadata } : {}),
+      ...nodeMetadata
     });
   }
 
@@ -88,20 +105,9 @@ export class ContainerService {
     input: UpdateContainerInput
   ): Promise<NodeRecord> {
     await this.getContainer(containerId, userId);
+    rejectQuantityForNonItem("CONTAINER", input.quantity);
 
-    const updates: Partial<Pick<NodeRecord, "name" | "metadata" | "images">> = {};
-
-    if (input.name !== undefined) {
-      updates.name = requireNonEmptyString(input.name, "name");
-    }
-
-    if (input.metadata !== undefined) {
-      updates.metadata = optionalMetadata(input.metadata);
-    }
-
-    if (input.images !== undefined) {
-      updates.images = normalizeImages(input.images);
-    }
+    const updates = this.buildContainerUpdates(input);
 
     if (Object.keys(updates).length === 0) {
       throw new ApiError(400, "VALIDATION_ERROR", "At least one field must be provided");
@@ -153,6 +159,34 @@ export class ContainerService {
     }
 
     await this.store.deleteById(containerId, userId);
+  }
+
+  private buildContainerUpdates(input: UpdateContainerInput) {
+    const updates: Record<string, unknown> = {};
+
+    if (input.name !== undefined) {
+      updates.name = requireNonEmptyString(input.name, "name");
+    }
+
+    if (input.metadata !== undefined) {
+      updates.metadata = optionalMetadata(input.metadata);
+    }
+
+    if (input.images !== undefined) {
+      updates.images = normalizeImages(input.images);
+    }
+
+    const nodeMetadata = parseTagsAndDescriptionForUpdate(input);
+
+    if (input.tags !== undefined) {
+      updates.tags = nodeMetadata.tags?.length ? nodeMetadata.tags : undefined;
+    }
+
+    if (input.description !== undefined) {
+      updates.description = nodeMetadata.description;
+    }
+
+    return updates;
   }
 }
 

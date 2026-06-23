@@ -10,7 +10,8 @@ function createNode(
   name: string,
   parentId: string | null,
   spaceId = "space-1",
-  userId = "user-1"
+  userId = "user-1",
+  extras: Partial<Pick<NodeRecord, "tags" | "description" | "quantity">> = {}
 ): NodeRecord {
   const now = new Date();
 
@@ -22,6 +23,7 @@ function createNode(
     parentId,
     spaceId,
     images: [],
+    ...extras,
     createdAt: now,
     updatedAt: now
   };
@@ -89,6 +91,49 @@ describe("HierarchyService", () => {
       path.map((segment) => segment.name),
       ["Garage", "Shelf A", "Extension Cord"]
     );
+  });
+
+  it("includes node metadata in tree nodes and path segments", async () => {
+    const service = new HierarchyService();
+    const space = createNode("space-1", "SPACE", "Garage", null, "space-1", "user-1", {
+      tags: ["home"],
+      description: "Garage space"
+    });
+    const shelf = createNode(
+      "container-1",
+      "CONTAINER",
+      "Shelf A",
+      "space-1",
+      "space-1",
+      "user-1",
+      {
+        tags: ["storage"],
+        description: "Top shelf"
+      }
+    );
+    const item = createNode(
+      "item-1",
+      "ITEM",
+      "Extension Cord",
+      "container-1",
+      "space-1",
+      "user-1",
+      {
+        tags: ["tool"],
+        quantity: 2,
+        description: "Heavy duty"
+      }
+    );
+    const nodes = new Map([space, shelf, item].map((node) => [node._id, node]));
+
+    const tree = service.buildTree(space, [shelf, item]);
+    const path = await service.buildAncestorPath(item, async (nodeId) => nodes.get(nodeId) ?? null);
+
+    assert.equal(tree.tags?.[0], "home");
+    assert.equal(tree.children[0]?.description, "Top shelf");
+    assert.equal(tree.children[0]?.children[0]?.quantity, 2);
+    assert.equal(path[0]?.tags?.[0], "home");
+    assert.equal(path.at(-1)?.description, "Heavy duty");
   });
 
   it("rejects moving a Container beneath one of its descendants", () => {

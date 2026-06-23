@@ -282,4 +282,197 @@ describe("Item API", () => {
       ["Garage", "Extension Cord"]
     );
   });
+
+  it("creates, updates, and reads Items with metadata", async () => {
+    const { app } = createAuthTestApp();
+    const auth = await registerTestUser(app, "item-metadata@example.com");
+    const headers = authHeaders(auth);
+    const space = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/spaces",
+      { name: "Kitchen" },
+      { headers }
+    );
+    const container = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/containers",
+      {
+        name: "Pantry",
+        parentId: space.body.data.id
+      },
+      { headers }
+    );
+
+    const created = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/items",
+      {
+        name: "AA Batteries",
+        parentId: container.body.data.id,
+        quantity: 12,
+        tags: [" battery ", "electronics", "battery"],
+        description: "Backup pack"
+      },
+      { headers }
+    );
+
+    assert.equal(created.status, 201);
+    assert.equal(created.body.data.quantity, 12);
+    assert.deepEqual(created.body.data.tags, ["battery", "electronics"]);
+    assert.equal(created.body.data.description, "Backup pack");
+
+    const retrieved = await requestJson<NodeResponse>(
+      app,
+      "GET",
+      `/items/${created.body.data.id}`,
+      undefined,
+      { headers }
+    );
+
+    assert.equal(retrieved.body.data.quantity, 12);
+
+    const updated = await requestJson<NodeResponse>(
+      app,
+      "PATCH",
+      `/items/${created.body.data.id}`,
+      {
+        quantity: 8,
+        description: "Used four cells"
+      },
+      { headers }
+    );
+
+    assert.equal(updated.body.data.quantity, 8);
+    assert.equal(updated.body.data.description, "Used four cells");
+  });
+
+  it("defaults omitted Item quantity to 1", async () => {
+    const { app } = createAuthTestApp();
+    const auth = await registerTestUser(app, "item-default-quantity@example.com");
+    const headers = authHeaders(auth);
+    const space = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/spaces",
+      { name: "Garage" },
+      { headers }
+    );
+    const item = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/items",
+      {
+        name: "Hammer",
+        parentId: space.body.data.id
+      },
+      { headers }
+    );
+
+    assert.equal(item.body.data.quantity, 1);
+  });
+
+  it("rejects invalid Item quantity", async () => {
+    const { app } = createAuthTestApp();
+    const auth = await registerTestUser(app, "item-invalid-quantity@example.com");
+    const headers = authHeaders(auth);
+    const space = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/spaces",
+      { name: "Garage" },
+      { headers }
+    );
+
+    const response = await requestJson<ApiErrorResponse>(
+      app,
+      "POST",
+      "/items",
+      {
+        name: "Batteries",
+        parentId: space.body.data.id,
+        quantity: -1
+      },
+      { headers }
+    );
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.error.code, "VALIDATION_ERROR");
+  });
+
+  it("propagates Item metadata through subtree, tree, and path responses", async () => {
+    const { app } = createAuthTestApp();
+    const auth = await registerTestUser(app, "item-propagation@example.com");
+    const headers = authHeaders(auth);
+    const space = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/spaces",
+      {
+        name: "Garage",
+        tags: ["home"],
+        description: "Garage space"
+      },
+      { headers }
+    );
+    const container = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/containers",
+      {
+        name: "Shelf A",
+        parentId: space.body.data.id,
+        tags: ["storage"],
+        description: "Top shelf"
+      },
+      { headers }
+    );
+    const item = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/items",
+      {
+        name: "Extension Cord",
+        parentId: container.body.data.id,
+        quantity: 2,
+        tags: ["tool"],
+        description: "Heavy duty"
+      },
+      { headers }
+    );
+
+    const subtree = await requestJson<NodeListResponse>(
+      app,
+      "GET",
+      `/containers/${container.body.data.id}/items`,
+      undefined,
+      { headers }
+    );
+
+    assert.equal(subtree.body.data[0]?.quantity, 2);
+    assert.deepEqual(subtree.body.data[0]?.tags, ["tool"]);
+
+    const tree = await requestJson<{
+      data: { children: Array<{ children: Array<{ quantity?: number; tags?: string[] }> }> };
+    }>(app, "GET", `/spaces/${space.body.data.id}/tree`, undefined, { headers });
+
+    const treeItem = tree.body.data.children[0]?.children[0];
+    assert.equal(treeItem?.quantity, 2);
+    assert.deepEqual(treeItem?.tags, ["tool"]);
+
+    const path = await requestJson<ItemPathResponse>(
+      app,
+      "GET",
+      `/items/${item.body.data.id}/path`,
+      undefined,
+      { headers }
+    );
+
+    assert.equal(path.body.data.path[0]?.tags?.[0], "home");
+    assert.equal(path.body.data.path[1]?.description, "Top shelf");
+    assert.equal(path.body.data.path.at(-1)?.quantity, 2);
+    assert.equal(path.body.data.path.at(-1)?.description, "Heavy duty");
+  });
 });

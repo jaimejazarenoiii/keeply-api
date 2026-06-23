@@ -1,8 +1,9 @@
-import type { NodeRecord, NodeType, PathSegment, TreeNode } from "../types/node";
+import type { NodeRecord, PathSegment, TreeNode } from "../types/node";
+import { toPathSegment, toTreeNode } from "../utils/node-response";
 import { ApiError } from "../utils/errors";
 
 export interface ParentValidationInput {
-  childType: NodeType;
+  childType: NodeRecord["type"];
   childId?: string;
   parent: NodeRecord;
 }
@@ -107,12 +108,7 @@ export class HierarchyService {
       }
 
       visitedIds.add(current._id);
-      path.unshift({
-        id: current._id,
-        type: current.type,
-        name: current.name,
-        images: current.images
-      });
+      path.unshift(toPathSegment(current));
 
       current = current.parentId ? await loadNode(current.parentId) : null;
 
@@ -125,16 +121,7 @@ export class HierarchyService {
   }
 
   createTreeNode(node: NodeRecord, children: TreeNode[] = []): TreeNode {
-    return {
-      id: node._id,
-      type: node.type,
-      name: node.name,
-      parentId: node.parentId,
-      spaceId: node.spaceId,
-      images: node.images,
-      ...(node.metadata ? { metadata: node.metadata } : {}),
-      children
-    };
+    return toTreeNode(node, children);
   }
 
   buildTree(root: NodeRecord, descendants: NodeRecord[]): TreeNode {

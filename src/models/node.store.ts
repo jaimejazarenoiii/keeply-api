@@ -1,22 +1,32 @@
 import { NodeModel } from "./node.model";
 import type { NodeRecord, NodeType } from "../types/node";
+import { buildMongooseSearchFilter } from "../utils/node-search";
+import type { NodeSearchCriteria } from "../utils/node-search";
 
 export type CreateNodeInput = Omit<NodeRecord, "createdAt" | "updatedAt">;
+
+export type NodeUpdateFields = Partial<
+  Pick<
+    NodeRecord,
+    "name" | "parentId" | "spaceId" | "metadata" | "images" | "tags" | "description" | "quantity"
+  >
+>;
 
 export interface NodeStore {
   create(input: CreateNodeInput): Promise<NodeRecord>;
   findById(id: string, userId: string): Promise<NodeRecord | null>;
   findByType(type: NodeType, userId: string): Promise<NodeRecord[]>;
   findChildrenBySpace(spaceId: string, userId: string): Promise<NodeRecord[]>;
-  updateById(
-    id: string,
-    userId: string,
-    updates: Partial<Pick<NodeRecord, "name" | "parentId" | "spaceId" | "metadata" | "images">>
-  ): Promise<NodeRecord | null>;
+  updateById(id: string, userId: string, updates: NodeUpdateFields): Promise<NodeRecord | null>;
   deleteById(id: string, userId: string): Promise<boolean>;
   countChildren(parentId: string, userId: string): Promise<number>;
   countDescendants(spaceId: string, userId: string): Promise<number>;
+  countByType(type: NodeType, userId: string): Promise<number>;
+  findRecentByType(type: NodeType, userId: string, limit: number): Promise<NodeRecord[]>;
+  searchNodes(userId: string, criteria: NodeSearchCriteria): Promise<NodeRecord[]>;
 }
+
+export type { NodeSearchCriteria };
 
 function normalizeNodeRecord(node: unknown): NodeRecord {
   const raw = node as NodeRecord & {
@@ -31,6 +41,32 @@ function normalizeNodeRecord(node: unknown): NodeRecord {
     createdAt: raw.createdAt ?? new Date(),
     updatedAt: raw.updatedAt ?? new Date()
   };
+}
+
+function buildUpdateQuery(updates: NodeUpdateFields): Record<string, unknown> {
+  const set: Record<string, unknown> = {};
+  const unset: Record<string, 1> = {};
+
+  for (const [field, value] of Object.entries(updates)) {
+    if (value === undefined) {
+      unset[field] = 1;
+      continue;
+    }
+
+    set[field] = value;
+  }
+
+  const query: Record<string, unknown> = {};
+
+  if (Object.keys(set).length > 0) {
+    query.$set = set;
+  }
+
+  if (Object.keys(unset).length > 0) {
+    query.$unset = unset;
+  }
+
+  return query;
 }
 
 export class MongooseNodeStore implements NodeStore {
@@ -67,9 +103,10 @@ export class MongooseNodeStore implements NodeStore {
   async updateById(
     id: string,
     userId: string,
-    updates: Partial<Pick<NodeRecord, "name" | "parentId" | "spaceId" | "metadata" | "images">>
+    updates: NodeUpdateFields
   ): Promise<NodeRecord | null> {
-    const node = await NodeModel.findOneAndUpdate({ _id: id, userId }, updates, {
+    const updateQuery = buildUpdateQuery(updates);
+    const node = await NodeModel.findOneAndUpdate({ _id: id, userId }, updateQuery, {
       new: true,
       runValidators: true
     }).lean();
@@ -89,6 +126,28 @@ export class MongooseNodeStore implements NodeStore {
 
   async countDescendants(spaceId: string, userId: string): Promise<number> {
     return NodeModel.countDocuments({ spaceId, userId, type: { $ne: "SPACE" } });
+  }
+
+  async countByType(type: NodeType, userId: string): Promise<number> {
+    return NodeModel.countDocuments({ type, userId });
+  }
+
+  async findRecentByType(type: NodeType, userId: string, limit: number): Promise<NodeRecord[]> {
+    const nodes = await NodeModel.find({ type, userId })
+      .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
+      .limit(limit)
+      .lean();
+
+    return nodes.map(normalizeNodeRecord);
+  }
+
+  async searchNodes(userId: string, criteria: NodeSearchCriteria): Promise<NodeRecord[]> {
+    const nodes = await NodeModel.find(buildMongooseSearchFilter(userId, criteria))
+      .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
+      .limit(criteria.limit)
+      .lean();
+
+    return nodes.map(normalizeNodeRecord);
   }
 }
 

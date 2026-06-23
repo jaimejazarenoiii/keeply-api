@@ -152,6 +152,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+  /dashboard:
+    get:
+      summary: Get storage dashboard summary
+      operationId: getDashboardSummary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard summary returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /search:
+    get:
+      summary: Search spaces, containers, and items by text
+      description: >
+        Provide a single search string (`q`). The backend matches it against each
+        node's name, description, and tags (case-insensitive substring match).
+      operationId: searchNodes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search text
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [SPACE, CONTAINER, ITEM]
+          description: Restrict results to one or more node types (comma-separated)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Maximum number of results to return
+      responses:
+        "200":
+          description: Matching nodes returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeListResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
   /spaces:
     get:
       summary: List spaces
@@ -723,6 +782,16 @@ components:
         metadata:
           type: object
           additionalProperties: true
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+          minimum: 0
+          description: Item-only count. Defaults to 1 when omitted in storage.
         createdAt:
           type: string
           format: date-time
@@ -756,6 +825,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NodeImage"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+          minimum: 0
     NodeImage:
       type: object
       required:
@@ -804,6 +882,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NodeImageInput"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
     CreateContainerRequest:
       type: object
       required:
@@ -822,6 +906,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NodeImageInput"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
     CreateItemRequest:
       type: object
       required:
@@ -840,6 +930,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NodeImageInput"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+          minimum: 0
     UpdateNodeRequest:
       type: object
       minProperties: 1
@@ -853,6 +952,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NodeImageInput"
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+          minimum: 0
     MoveNodeRequest:
       type: object
       required:
@@ -907,6 +1015,59 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/TreeNode"
+    DashboardCounts:
+      type: object
+      required:
+        - spaces
+        - containers
+        - items
+      properties:
+        spaces:
+          type: integer
+          minimum: 0
+        containers:
+          type: integer
+          minimum: 0
+        items:
+          type: integer
+          minimum: 0
+    DashboardSummary:
+      type: object
+      required:
+        - counts
+        - recent
+      properties:
+        counts:
+          $ref: "#/components/schemas/DashboardCounts"
+        recent:
+          type: object
+          required:
+            - spaces
+            - containers
+            - items
+          properties:
+            spaces:
+              type: array
+              maxItems: 5
+              items:
+                $ref: "#/components/schemas/Node"
+            containers:
+              type: array
+              maxItems: 5
+              items:
+                $ref: "#/components/schemas/Node"
+            items:
+              type: array
+              maxItems: 10
+              items:
+                $ref: "#/components/schemas/Node"
+    DashboardSummaryResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/DashboardSummary"
     ItemPathResponse:
       type: object
       required:

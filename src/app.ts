@@ -13,10 +13,16 @@ import { AuthService } from "./modules/auth/auth.service";
 import { ContainerController } from "./modules/container/container.controller";
 import { createContainerRouter } from "./modules/container/container.routes";
 import { ContainerService } from "./modules/container/container.service";
+import { DashboardController } from "./modules/dashboard/dashboard.controller";
+import { createDashboardRouter } from "./modules/dashboard/dashboard.routes";
+import { DashboardService } from "./modules/dashboard/dashboard.service";
 import { createDocsRouter } from "./modules/docs/docs.routes";
 import { ItemController } from "./modules/item/item.controller";
 import { createItemRouter } from "./modules/item/item.routes";
 import { ItemService } from "./modules/item/item.service";
+import { SearchController } from "./modules/search/search.controller";
+import { createSearchRouter } from "./modules/search/search.routes";
+import { SearchService } from "./modules/search/search.service";
 import { SpaceController } from "./modules/space/space.controller";
 import { createSpaceRouter } from "./modules/space/space.routes";
 import { SpaceService } from "./modules/space/space.service";
@@ -49,6 +55,10 @@ export function createApp(dependencies: AppDependencies = {}): express.Express {
   const containerController = new ContainerController(containerService);
   const itemController = new ItemController(itemService);
   const authController = new AuthController(authService);
+  const dashboardService = new DashboardService(dependencies.nodeStore);
+  const dashboardController = new DashboardController(dashboardService);
+  const searchService = new SearchService(dependencies.nodeStore);
+  const searchController = new SearchController(searchService);
   const subscriptionController = new SubscriptionController(
     subscriptionService,
     dependencies.revenueCatWebhookAuthToken ?? process.env.REVENUECAT_WEBHOOK_AUTH_TOKEN ?? ""
@@ -81,6 +91,8 @@ export function createApp(dependencies: AppDependencies = {}): express.Express {
     });
   });
 
+  app.use("/dashboard", createDashboardRouter(dashboardController, authMiddleware));
+  app.use("/search", createSearchRouter(searchController, authMiddleware));
   app.use("/spaces", createSpaceRouter(spaceController, authMiddleware));
   app.use("/containers", createContainerRouter(containerController, authMiddleware));
   app.use("/items", createItemRouter(itemController, authMiddleware));

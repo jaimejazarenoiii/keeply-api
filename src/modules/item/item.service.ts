@@ -1,10 +1,17 @@
 import { Types } from "mongoose";
-import type { NodeStore } from "../../models/node.store";
+import type { NodeStore, NodeUpdateFields } from "../../models/node.store";
 import { nodeStore } from "../../models/node.store";
 import { hierarchyService } from "../../services/hierarchy.service";
 import type { ItemPath, NodeRecord } from "../../types/node";
 import { ApiError } from "../../utils/errors";
-import { normalizeImages, optionalMetadata, requireNonEmptyString } from "../../utils/validation";
+import {
+  normalizeImages,
+  optionalMetadata,
+  optionalQuantity,
+  parseTagsAndDescriptionForCreate,
+  parseTagsAndDescriptionForUpdate,
+  requireNonEmptyString
+} from "../../utils/validation";
 
 export interface CreateItemInput {
   userId: string;
@@ -12,12 +19,18 @@ export interface CreateItemInput {
   parentId: unknown;
   metadata?: unknown;
   images?: unknown;
+  tags?: unknown;
+  description?: unknown;
+  quantity?: unknown;
 }
 
 export interface UpdateItemInput {
   name?: unknown;
   metadata?: unknown;
   images?: unknown;
+  tags?: unknown;
+  description?: unknown;
+  quantity?: unknown;
 }
 
 export interface MoveItemInput {
@@ -30,6 +43,8 @@ export class ItemService {
   async createItem(input: CreateItemInput): Promise<NodeRecord> {
     const parent = await this.getValidParent(input.parentId, input.userId);
     const metadata = optionalMetadata(input.metadata);
+    const nodeMetadata = parseTagsAndDescriptionForCreate(input);
+    const quantity = optionalQuantity(input.quantity);
 
     return this.store.create({
       _id: new Types.ObjectId().toHexString(),
@@ -39,7 +54,9 @@ export class ItemService {
       parentId: parent._id,
       spaceId: hierarchyService.getParentSpaceId(parent),
       images: normalizeImages(input.images),
-      ...(metadata ? { metadata } : {})
+      ...(metadata ? { metadata } : {}),
+      ...nodeMetadata,
+      ...(quantity !== undefined ? { quantity } : {})
     });
   }
 
@@ -56,19 +73,7 @@ export class ItemService {
   async updateItem(itemId: string, userId: string, input: UpdateItemInput): Promise<NodeRecord> {
     await this.getItem(itemId, userId);
 
-    const updates: Partial<Pick<NodeRecord, "name" | "metadata" | "images">> = {};
-
-    if (input.name !== undefined) {
-      updates.name = requireNonEmptyString(input.name, "name");
-    }
-
-    if (input.metadata !== undefined) {
-      updates.metadata = optionalMetadata(input.metadata);
-    }
-
-    if (input.images !== undefined) {
-      updates.images = normalizeImages(input.images);
-    }
+    const updates = this.buildItemUpdates(input);
 
     if (Object.keys(updates).length === 0) {
       throw new ApiError(400, "VALIDATION_ERROR", "At least one field must be provided");
@@ -114,6 +119,38 @@ export class ItemService {
       itemId: item._id,
       path
     };
+  }
+
+  private buildItemUpdates(input: UpdateItemInput): NodeUpdateFields {
+    const updates: NodeUpdateFields = {};
+
+    if (input.name !== undefined) {
+      updates.name = requireNonEmptyString(input.name, "name");
+    }
+
+    if (input.metadata !== undefined) {
+      updates.metadata = optionalMetadata(input.metadata);
+    }
+
+    if (input.images !== undefined) {
+      updates.images = normalizeImages(input.images);
+    }
+
+    const nodeMetadata = parseTagsAndDescriptionForUpdate(input);
+
+    if (input.tags !== undefined) {
+      updates.tags = nodeMetadata.tags?.length ? nodeMetadata.tags : undefined;
+    }
+
+    if (input.description !== undefined) {
+      updates.description = nodeMetadata.description;
+    }
+
+    if (input.quantity !== undefined) {
+      updates.quantity = optionalQuantity(input.quantity);
+    }
+
+    return updates;
   }
 
   private async getValidParent(parentIdInput: unknown, userId: string): Promise<NodeRecord> {

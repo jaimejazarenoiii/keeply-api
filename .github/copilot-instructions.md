@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read
-`specs/002-user-auth-subscriptions/plan.md`.
+`specs/003-item-metadata-dashboard/plan.md`.
 <!-- SPECKIT END -->

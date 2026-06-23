@@ -17,6 +17,9 @@ export interface NodeRecord {
   spaceId: string;
   images: NodeImage[];
   metadata?: Record<string, unknown>;
+  tags?: string[];
+  description?: string;
+  quantity?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +32,9 @@ export interface NodeDto {
   spaceId: string;
   images: NodeImage[];
   metadata?: Record<string, unknown>;
+  tags?: string[];
+  description?: string;
+  quantity?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +47,9 @@ export interface TreeNode {
   spaceId: string;
   images: NodeImage[];
   metadata?: Record<string, unknown>;
+  tags?: string[];
+  description?: string;
+  quantity?: number;
   children: TreeNode[];
 }
 
@@ -49,6 +58,9 @@ export interface PathSegment {
   type: NodeType;
   name: string;
   images: NodeImage[];
+  tags?: string[];
+  description?: string;
+  quantity?: number;
 }
 
 export interface ItemPath {

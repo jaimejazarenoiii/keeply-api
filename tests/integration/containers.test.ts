@@ -244,4 +244,73 @@ describe("Container API", () => {
     assert.equal(response.status, 400);
     assert.equal(response.body.error.code, "INVALID_MOVE");
   });
+
+  it("creates and updates Containers with tags and description", async () => {
+    const { app } = createAuthTestApp();
+    const auth = await registerTestUser(app, "container-metadata@example.com");
+    const headers = authHeaders(auth);
+    const space = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/spaces",
+      { name: "Garage" },
+      { headers }
+    );
+
+    const created = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/containers",
+      {
+        name: "Shelf A",
+        parentId: space.body.data.id,
+        tags: [" shelf ", "storage", "Shelf"],
+        description: "Metal shelf"
+      },
+      { headers }
+    );
+
+    assert.deepEqual(created.body.data.tags, ["shelf", "storage"]);
+    assert.equal(created.body.data.description, "Metal shelf");
+
+    const updated = await requestJson<NodeResponse>(
+      app,
+      "PATCH",
+      `/containers/${created.body.data.id}`,
+      {
+        description: "Updated shelf note"
+      },
+      { headers }
+    );
+
+    assert.equal(updated.body.data.description, "Updated shelf note");
+  });
+
+  it("rejects quantity on Container create and update", async () => {
+    const { app } = createAuthTestApp();
+    const auth = await registerTestUser(app, "container-quantity@example.com");
+    const headers = authHeaders(auth);
+    const space = await requestJson<NodeResponse>(
+      app,
+      "POST",
+      "/spaces",
+      { name: "Garage" },
+      { headers }
+    );
+
+    const created = await requestJson<ApiErrorResponse>(
+      app,
+      "POST",
+      "/containers",
+      {
+        name: "Shelf A",
+        parentId: space.body.data.id,
+        quantity: 3
+      },
+      { headers }
+    );
+
+    assert.equal(created.status, 400);
+    assert.equal(created.body.error.code, "VALIDATION_ERROR");
+  });
 });
